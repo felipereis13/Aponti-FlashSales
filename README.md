@@ -1,145 +1,176 @@
-Flash Sales API 
+# Flash Sales API
 
+API para vendas relâmpago de ingressos, desenvolvida com Node.js, TypeScript e Express. Utiliza Redis com script Lua para controle atômico de estoque, PostgreSQL com TypeORM para persistência de pedidos e Prometheus com Grafana para observabilidade.
 
-API de vendas relâmpago de ingressos, construída com Node.js + TypeScript + Express, com controle de estoque atômico via Redis (script Lua), persistência de pedidos em PostgreSQL (TypeORM) e observabilidade com Prometheus + Grafana.
+## Funcionalidades
 
+- Compra de ingressos com validação de disponibilidade.
+- Controle atômico de estoque no Redis.
+- Persistência de pedidos em PostgreSQL.
+- Endpoint para simulação de relatórios pesados e avaliação sob carga.
+- Exposição de métricas para o Prometheus e visualização no Grafana.
+- Testes automatizados e pipeline de integração e publicação de imagens Docker.
 
-Tecnologias
-Linguagem & Framework: Node.js 22, TypeScript, Express
+## Tecnologias
 
-Banco de Dados: PostgreSQL 16 (TypeORM)
+| Categoria | Tecnologias |
+| --- | --- |
+| Linguagem e execução | TypeScript e Node.js 22 |
+| Framework HTTP | Express |
+| Banco de dados e ORM | PostgreSQL 16 e TypeORM |
+| Controle de estoque | Redis 7 e Lua |
+| Observabilidade | Prometheus e Grafana |
+| Testes | Jest |
+| Ambiente | Docker e Docker Compose |
+| Automação | GitHub Actions e Docker Hub |
 
-Cache & Estoque: Redis 7
+## Estrutura do projeto
 
-Observabilidade: Prometheus e Grafana
-
-Ambiente & Testes: Docker, Docker Compose, Jest
-
-Automação (CI/CD): GitHub Actions e Docker Hub
-
-
-🗂️ Estrutura do Projeto
-Plaintext
+```text
 .
-├── .github/workflows/    # Configuração da pipeline de CI/CD
-├── src/                  # Código-fonte da aplicação
-│   ├── config/           # Conexões com banco de dados e cache
-│   ├── controllers/      # Entrada das requisições e respostas
-│   ├── entities/         # Modelos de dados (PostgreSQL)
-│   ├── middlewares/      # Coleta de métricas e tratamento de erros
-│   ├── routes/           # Rotas disponíveis na API
-│   └── services/         # Regras de negócio (ex: validação de estoque)
-├── tests/                # Testes automatizados
-├── Dockerfile            # Receita para criar a imagem da API
-├── docker-compose.yml    # Sobe todo o ambiente localmente
-└── prometheus.yml        # Configuração da coleta de métricas
+├── .github/
+│   └── workflows/       # Workflows de CI/CD
+├── src/
+│   ├── config/         # Configuração de conexões com PostgreSQL e Redis
+│   ├── controllers/    # Recebimento de requisições e envio de respostas
+│   ├── entities/       # Entidades mapeadas pelo TypeORM
+│   ├── middlewares/    # Coleta de métricas e tratamento de erros
+│   ├── routes/         # Definição das rotas da API
+│   └── services/       # Regras de negócio e controle de estoque
+├── tests/              # Testes automatizados
+├── Dockerfile          # Definição da imagem da aplicação
+├── docker-compose.yml  # Orquestração do ambiente local
+└── prometheus.yml      # Configuração de coleta de métricas
+```
 
+## Infraestrutura
 
+O ambiente é executado em contêineres. O Docker Compose inicializa cinco serviços:
 
+| Serviço | Nome no Compose | Porta | Responsabilidade |
+| --- | --- | --- | --- |
+| API | `app` | `3000` | Processar requisições e executar as regras de negócio |
+| PostgreSQL | `postgres` | `5432` | Persistir pedidos |
+| Redis | `redis` | `6379` | Controlar o estoque de ingressos |
+| Prometheus | `prometheus` | `9090` | Coletar métricas da API a cada 15 segundos |
+| Grafana | `grafana` | `3001` | Disponibilizar painéis de monitoramento |
 
+As credenciais definidas no `docker-compose.yml` destinam-se exclusivamente ao ambiente de desenvolvimento e testes locais.
 
-🐳 Como Funciona a Infraestrutura
-Docker & Docker Compose
-O projeto está 100% containerizado. Com um único comando, o Docker Compose inicializa 5 serviços interligados:
+## Execução local
 
-API (app): A aplicação Node.js rodando na porta 3000.
+### Pré-requisitos
 
-PostgreSQL (postgres): Armazena os pedidos salvos na porta 5432.
+- Git.
+- Docker com Docker Compose disponível pelo comando `docker compose`.
+- Node.js 22 e npm, caso deseje executar os testes fora dos contêineres.
 
-Redis (redis): Controla a contagem rápida e segura do estoque na porta 6379.
+### 1. Clonar o repositório
 
-Prometheus (prometheus): Coleta métricas de desempenho da API a cada 15 segundos na porta 9090.
-
-Grafana (grafana): Painel visual para monitorar a saúde da API na porta 3001.
-
- Aviso: As senhas do docker-compose.yml são apenas para testes locais.
- 
-
-
-
- Como Rodar o Projeto
- 
-
-Pré-requisitos
-Ter o Docker e o Docker Compose instalados na sua máquina.
-
-Passo a Passo
-
-1/Clone o repositório:
-Bash
+```bash
 git clone https://github.com/joaov877/flash-sales.git
 cd flash-sales
+```
 
-2/Suba todo o ambiente:
-Bash
+### 2. Inicializar o ambiente
+
+```bash
 docker compose up --build
+```
 
-3/Acesse os serviços:
-API: http://localhost:3000
+Para executar os serviços em segundo plano:
 
-Métricas brutas: http://localhost:3000/metrics
+```bash
+docker compose up --build -d
+```
 
-Painel do Prometheus: http://localhost:9090
+### 3. Acessar os serviços
 
-Painel do Grafana: http://localhost:3001 (Login: admin / Senha: admin)
+| Recurso | Endereço |
+| --- | --- |
+| Endereço base da API | http://localhost:3000 |
+| Métricas da API | http://localhost:3000/metrics |
+| Prometheus | http://localhost:9090 |
+| Grafana | http://localhost:3001 |
 
-4/Para parar o ambiente:
-Bash
+Credenciais locais do Grafana: usuário `admin` e senha `admin`.
+
+### 4. Encerrar o ambiente
+
+```bash
 docker compose down
+```
 
+## Rotas da API
 
-Rotas da API
+| Método | Rota | Descrição |
+| --- | --- | --- |
+| `POST` | `/checkout` | Valida o estoque no Redis e persiste o pedido no PostgreSQL |
+| `POST` | `/tickets/export` | Simula o processamento de relatórios pesados para testes sob carga |
+| `GET` | `/metrics` | Expõe métricas no formato compatível com o Prometheus |
 
+### Compra de ingressos
 
-Método	Rota	Descrição
-POST	/checkout	Realiza a compra do ingresso, valida o estoque no Redis e salva o pedido no Banco.
-POST	/tickets/export	Rota para simular relatórios pesados e testar a capacidade da API sob carga.
-GET	/metrics	Retorna as métricas de desempenho formatadas para o Prometheus.
-Exemplo de Checkout (POST /checkout)
-Bash
-curl -X POST http://localhost:3000/checkout \
+Antes de realizar uma compra de teste, inicialize o estoque do evento no Redis. Execute o comando na raiz do projeto, com o ambiente em execução:
+
+```bash
+docker compose exec redis redis-cli SET event:show-123:tickets 100
+```
+
+Esse comando define o estoque do evento `show-123` em 100 ingressos. Executá-lo novamente substitui o saldo existente.
+
+Envie uma requisição para `POST /checkout`:
+
+```bash
+curl -i -X POST http://localhost:3000/checkout \
   -H "Content-Type: application/json" \
-  -d '{
-    "eventId": "show-123",
-    "userId": "user-01",
-    "quantity": 2
-  }'
-201 Created: Compra realizada com sucesso.
+  -d '{ "eventId": "show-123", "userId": "user-01", "quantity": 2 }'
+```
 
-400 Bad Request: Dados obrigatórios faltando.
+O exemplo utiliza a sintaxe de Bash.
 
-409 Conflict: Ingressos esgotados.
+#### Corpo da requisição
 
-Dica de teste: Antes de comprar, defina o estoque do evento no Redis executando:
+| Campo | Tipo | Descrição |
+| --- | --- | --- |
+| `eventId` | `string` | Identificador do evento |
+| `userId` | `string` | Identificador do comprador |
+| `quantity` | `number` | Quantidade de ingressos solicitada |
 
-docker exec -it flash-sales-redis redis-cli SET event:show-123:tickets 100
+#### Códigos de resposta
 
+| Código HTTP | Significado |
+| --- | --- |
+| `201 Created` | Compra realizada com sucesso |
+| `400 Bad Request` | Ausência de dados obrigatórios |
+| `409 Conflict` | Ingressos esgotados |
 
-   Testes
+## Testes
 
-   
-Os testes verificam se as regras de negócio (como validação de estoque e criação de pedidos) estão funcionando sem precisar conectar aos bancos de dados reais.
+Os testes automatizados verificam as regras de negócio, incluindo a validação de estoque e a criação de pedidos, sem depender de conexões com bancos de dados reais.
 
-Para rodar os testes localmente:
+Para instalar as dependências e executar os testes, utilize:
 
-Bash
+```bash
 npm ci
 npm test
+```
 
+## Integração e entrega contínuas
 
+O workflow definido em `.github/workflows/ci-cd.yml` automatiza a execução dos testes e a publicação da imagem Docker.
 
-🔄 CI/CD e Automação
+| Etapa | Comportamento |
+| --- | --- |
+| Testes | Executados a cada push ou pull request direcionado às branches `main` ou `master` |
+| Publicação | Após a aprovação dos testes, alterações enviadas à branch principal acionam a construção e a publicação da imagem no Docker Hub |
+| Versionamento da imagem | Publicação com a tag `latest` e uma tag associada ao identificador do commit |
 
+### Configuração dos secrets
 
-O projeto conta com uma esteira automatizada no GitHub Actions (.github/workflows/ci-cd.yml):
+No repositório do GitHub, acesse **Settings → Secrets and variables → Actions** e configure:
 
-Testes Automáticos: A cada push ou pull request nas branches main ou master, os testes unitários são executados em um banco de dados temporário.
-
-Publicação da Imagem: Se os testes passarem e a alteração for enviada para a branch principal, a pipeline constrói a imagem Docker e publica no Docker Hub sob a tag latest e com o identificador único do commit.
-
-Variaveis Secretas (Secrets)
-Para a publicação automática funcionar, configure as seguintes variáveis nas configurações do repositório (Settings -> Secrets and variables -> Actions):
-
-DOCKERHUB_USERNAME: Seu usuário no Docker Hub.
-
-DOCKERHUB_TOKEN: Token de acesso gerado no Docker Hub.
+| Secret | Descrição |
+| --- | --- |
+| `DOCKERHUB_USERNAME` | Nome de usuário da conta no Docker Hub |
+| `DOCKERHUB_TOKEN` | Token de acesso do Docker Hub utilizado pela pipeline para publicar imagens |
